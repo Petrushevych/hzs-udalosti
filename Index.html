@@ -494,7 +494,7 @@ function pridatUdalost() {
       "OST": "Ostatní událost"
     };
 
-    const hlaseniText = `Pozor poplach! Nová událost. ${typText[typ] || nazev} Ulice ${ulice} ${mesto}. ${typText[typ] || nazev} ${poznamka || "bez poznámky"}. Vyjede: ${jednotky.join(", ")}.`;
+const hlaseniText = `Pozor poplach! Nová událost. ${typText[typ] || nazev} Ulice ${ulice} ${mesto}. ${typText[typ] || nazev} ${poznamka || "bez poznámky"}. Vyjede: ${jednotky.join(", ")}.`;
 
 // 🔁 Poslat hlášení ostatním záložkám
 kanal.postMessage({
@@ -510,8 +510,7 @@ hlaseni.rate = 0.95;
 hlaseni.pitch = 0.9;
 hlaseni.volume = 1;
 
-const hlasy = speechSynthesis.getVoices();
-const ceskyHlas = hlasy.find(h => h.lang === "cs-CZ" && h.name.includes("Google"));
+const ceskyHlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
 if (ceskyHlas) {
   hlaseni.voice = ceskyHlas;
 }
@@ -523,7 +522,9 @@ hlaseni.onend = () => {
 };
 
 speechSynthesis.speak(hlaseni);
-  };
+};
+
+
 
   // 🕒 Čas vyhlášení
   const casVyhlaseni = new Date().toLocaleString("cs-CZ", {
@@ -752,10 +753,18 @@ function ulozitAOdhlasit() {
 
 window.onload = function () {
   // ✅ Aktivace hlasového enginu po prvním kliknutí
-  document.body.addEventListener("click", () => {
-    const dummy = new SpeechSynthesisUtterance("");
-    speechSynthesis.speak(dummy);
-  }, { once: true });
+document.body.addEventListener("click", () => {
+  const dummy = new SpeechSynthesisUtterance("");
+  speechSynthesis.speak(dummy);
+
+  const zvuk = document.getElementById("zvuk-udalosti");
+  if (zvuk) {
+    zvuk.muted = false;
+    zvuk.play().catch(() => {});
+    zvuk.pause();
+    zvuk.currentTime = 0;
+  }
+}, { once: true });
 
   // 🔁 Načtení dat z Firebase
   firebase.database().ref("udalosti").on("value", snapshot => {
