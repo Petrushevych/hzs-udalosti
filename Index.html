@@ -51,7 +51,31 @@ body {
     pointer-events: none;
     z-index: 0;
   }
+#prepni button {
+  background-color: #e0e0e0;
+  border: 1px solid #999;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 5px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.2s ease-in-out;
+}
 
+#prepni button:hover {
+  background-color: #d5d5d5;
+  transform: translateY(-1px);
+}
+
+#prepni button.active {
+  background-color: #2e7d32;
+  color: #fff;
+  border-color: #1b5e20;
+  box-shadow: 0 0 0 2px rgba(46,125,50,0.3);
+}
   button,
   .razitko {
     display: none !important;
@@ -384,7 +408,8 @@ zák. č. 141/1961 Sb. TŘ<br>
 
   <img src="razitko.png" alt="Razítko" class="razitko">
   <button onclick="downloadPDF()">Uložit jako PDF</button>
-  <div id="zaznam4" class="a4" style="display: none;">
+  </div></div>
+<div id="zaznam4" class="a4" style="display: none;">
   <h1>ZÁZNAM O ZÁSAHU</h1>
   <div class="dil">díl D</div>
   <div class="cislo">Záznam č. <span id="cislo4"></span></div>
@@ -396,12 +421,12 @@ zák. č. 141/1961 Sb. TŘ<br>
 
   <div class="radek">
     <label>Místo zásahu:</label>
-    <input type="text" placeholder="např. Krupka, ul. Revoluční" required>
+    <input type="text" placeholder="např. Praha, ul. Revoluční" required>
   </div>
 
   <div class="radek">
     <label>Typ události:</label>
-    <input type="text" placeholder="např. výjezd k násilné trestné činnosti" required>
+    <input type="text" placeholder="např. Výjezd k násilné trestné činnosti" required>
   </div>
 
   <div class="radek">
@@ -429,6 +454,12 @@ function zobrazZaznam(volba) {
   for (let i = 1; i <= 4; i++) {
     document.getElementById(`zaznam${i}`).style.display = volba === i ? "block" : "none";
   }
+
+  // Aktivní tlačítko
+  const tlacitka = document.querySelectorAll("#prepni button");
+  tlacitka.forEach((btn, index) => {
+    btn.classList.toggle("active", index === volba - 1);
+  });
 }
 
 </script>
