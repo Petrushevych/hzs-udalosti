@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>Události HZS FIVEPD</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+#form-box button {
+  flex-direction: column;
+  align-items: center;
+  margin-right: 10px;
+  padding: 20px 32px;
+  font-weight: bold;
+  background-color: #eaeaea;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+#form-box label {
+  font-size: 1.0em;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-align: center;
+  width: 100%;
+}
+
+#form-box input[type="text"],
+#form-box select {
+  padding: 5px;
+  font-size: 1em;
+  width: 235px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+    #map {
+      flex-grow: 1;
+    }
+
+    #udalosti {
+      min-height: 150px;
+      max-height: 30vh;
+      overflow-y: auto;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+    }
+    
+#map {
+  height: 100vh;
+}
+
+#formular {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  max-width: 600px;
+  width: 90%;
+  font-size: 1.2em;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #888;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+#poznamka-box {
+  position: absolute;
+  top: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5em;
+  color: white;
+  text-shadow: 0 0 5px black;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-overflow: unset;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  max-width: 90vw;
+}
+
+#pozice-box {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 1.6em;
+  font-weight: bold;
+  display: none;
+  z-index: 999;
+  white-space: nowrap;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  letter-spacing: 0.5px;
+}
+
+#firebase-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 128, 0, 0.85); /* zelené pozadí */
+  color: white;
+  padding: 20px 40px;
+  border-radius: 12px;
+  font-size: 1.6em;
+  font-weight: bold;
+  display: none;
+  z-index: 999;
+  white-space: nowrap;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  text-align: center;
+}
+
+.modal-content h2 {
+  font-size: 0.8em;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #888;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+.radek-akce {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+  align-items: center;
+}
+
+.radek-akce label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.radek-akce input[type="text"] {
+  width: 200px;
+  box-sizing: border-box;
+}
+
+.radek-akce button {
+  padding: 15px 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.radek-jednotky .popisek {
+  font-weight: bold;
+  min-width: 150px;
+}
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    .info-icon {
+      cursor: pointer;
+      color: blue;
+    }
+
+    #form-box {
+      display: none;
+    }
+
+    @media print {
+      #map, #form-box, #heslo-box {
+        display: none;
+      }
+      #udalosti {
+        max-height: none;
+        overflow: visible;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="heslo-box">
+  <label>Zadej heslo KOPIS:</label>
+  <input type="password" id="heslo" placeholder="">
+  <button onclick="overitHeslo()">Odemknout přístup</button>
+</div>
+
+<div id="form-box">
+  <label>Název události:</label>
+  <input type="text" id="nazev" placeholder="Např. POŽÁR, DOPRAVNÍ NEHODA">
+  <label>Typ:</label>
+  <select id="typ">
+    <option value="P">Požár</option>
+    <option value="DN">Dopravní nehoda</option>
+    <option value="TP">Technická pomoc</option>
+    <option value="ZOZ">Záchrana osob a zvířat</option>
+    <option value="UNL">Únik nebezpečných látek</option>
+    <option value="POP">Poplach</option>
+    <option value="OST">Ostatní</option>
+  </select>
+<label>Ulice + č. p. (automaticky):</label>
+<input type="text" id="ulice" style="background-color: #f0f0f0;">
+
+<label>Město (automaticky):</label>
+<input type="text" id="mesto" style="background-color: #f0f0f0;">
+
+  <label>Stav:</label>
+  <select id="stav">
+    <option value="Přijatá, SaP na cestě">Přijatá, SaP na cestě</option>
+    <option value="Otevřená, SaP na místě">Otevřená, SaP na místě</option>
+    <option value="Lokalizace">Lokalizace</option>
+    <option value="Likvidace">Likvidace</option>
+    <option value="Převzatá VZ">Převzatá VZ</option>
+    <option value="Převzatá PČR">Převzatá PČR</option>
+    <option value="Uzavřená OS">Uzavřená OS</option>
+  </select>
+  <label>Popis události:</label>
+  <input type="text" id="poznamka" placeholder="Např. Požár garáže, bez zranění">
+<div class="radek-jednotky">
+  <span class="popisek">Jednotky na místě:</span>
+  <label><input type="checkbox" id="pcr"> PČR</label>
+  <label><input type="checkbox" id="rza"> RZA</label>
+  <label><input type="checkbox" id="t815"> T-815</label>
+  <label><input type="checkbox" id="cas20"> CAS 20</label>
+  <label><input type="checkbox" id="cas30"> CAS 30</label>
+  <label><input type="checkbox" id="az30"> AZ 30-S2Z</label>
+</div>
+  <button onclick="pridatUdalost()">Přidat událost</button>
+  <button onclick="vymazatUdalosti()">🗑️ Vymazat události</button>
+  <button onclick="window.print()">🖨️ Vytisknout</button>
+  <button onclick="ulozitAOdhlasit()">💾 Uložit a odhlásit</button>
+  </div>
+
+<div id="udalosti">
+  <table id="tabulka">
+<thead>
+  <tr>
+    <th>Čas</th>
+    <th>Název</th>
+    <th>Typ</th>
+    <th>Ulice</th>
+    <th>Město</th>
+    <th>Stav</th>
+    <th>Jednotky</th>
+    <th>Popis události</th>
+  </tr>
+</thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- Mapa -->
+<div id="map"></div>
+
+<!-- Modal pro poznámku -->
+<div id="poznamka-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close-btn" onclick="zavritPoznamku()">×</span>
+    <h2 style="margin-top: 0;">Popis události:</h2>
+    <div id="poznamka-text"></div>
+  </div>
+</div>
+
+<div id="firebase-box"></div>
+<audio id="zvuk-udalosti" src="https://files.catbox.moe/c0duwl.mp3"></audio>
+
+<div id="pozice-box"></div>
+
+<!-- Plovoucí poznámka nad mapou -->
+<div id="poznamka-box"></div>
+
+
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAf1s7JPna788ymY3ZmnQj6yEIM3H201cQ",
+    authDomain: "udalosti-hzs-fivepd.firebaseapp.com",
+    databaseURL: "https://udalosti-hzs-fivepd-default-rtdb.firebaseio.com",
+    projectId: "udalosti-hzs-fivepd",
+    storageBucket: "udalosti-hzs-fivepd.appspot.com",
+    messagingSenderId: "1032416028363",
+    appId: "1:1032416028363:web:f150ad103ea19b9f7e9d4e"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+const kanal = new BroadcastChannel("udalosti-kanal");
+const mojeId = Math.random().toString(36).substr(2, 9);
+
+// Aktivace hlasového enginu
+window.speechSynthesis.onvoiceschanged = () => {
+  window.availableVoices = speechSynthesis.getVoices();
+};
+
+
+// Aktivace hlasového enginu
+window.speechSynthesis.onvoiceschanged = () => {
+  window.availableVoices = speechSynthesis.getVoices();
+    }
+    
+// Posluchač pro příchozí hlášení
+kanal.onmessage = (event) => {
+  if (event.data.typ === "hlaseni" && event.data.odesilatel !== mojeId) {
+    const zvuk = document.getElementById("zvuk-udalosti");
+    if (zvuk) {
+      zvuk.muted = false;
+      zvuk.currentTime = 0;
+      zvuk.play();
+    }
+
+    const hlaseni = new SpeechSynthesisUtterance(event.data.text);
+    hlaseni.lang = "cs-CZ";
+    hlaseni.rate = 1;
+    hlaseni.pitch = 1;
+
+    const ceskyHlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
+    if (ceskyHlas) {
+      hlaseni.voice = ceskyHlas;
+    }
+
+    speechSynthesis.speak(hlaseni);
+  }
+};
+
+
+
+  const map = L.map('map', {
+    crs: L.CRS.Simple,
+    minZoom: -2,
+    maxZoom: 4
+  });
+
+  // ... další kód
+  
+  const bounds = [[0,0], [1024,1024]];
+  const image = L.imageOverlay('mapa.png', bounds).addTo(map);
+  map.fitBounds(bounds);
+
+  const ikony = {
+    "P": L.icon({ iconUrl: 'pozar.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+    "DN": L.icon({ iconUrl: 'nehoda.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+    "TP": L.icon({ iconUrl: 'technika.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+    "ZOZ": L.icon({ iconUrl: 'zachrana.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+    "UNL": L.icon({ iconUrl: 'unik.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+    "POP": L.icon({ iconUrl: 'poplach.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+    "OST": L.icon({ iconUrl: 'ostatní.png', iconSize: [32, 32], iconAnchor: [32, 32], popupAnchor: [0, -32] }),
+  };
+  
+const uliceSeznam = [
+  "Masarykova", "Dlouhá", "Komenského", "Husova", "Školní",
+  "Nádražní", "Jiráskova", "Palackého", "Smetanova", "Tyršova",
+  "Na Výsluní", "Pod Páteří", "U Lesa", "Kpt. Jaroše", "U Hřiště", "Zahradní", "Cimrmanova", "Slunečná", "Politická",
+];
+
+const mestaSeznam = [
+    "Ústí nad Labem", "Praha", "Klášterec nad Ohří", "Teplice", "Děčín", "Litoměřice", "Most",
+    "Chomutov", "Louny", "Roudnice nad Labem", "Bílina", "Žatec", "Praha 2", "Praha 3", "Praha 4", "Brno", "Ostrava"
+];
+
+  let kliknuteLatLng = null;
+
+map.on('click', function(e) {
+  kliknuteLatLng = e.latlng;
+
+  const box = document.getElementById("pozice-box");
+  box.innerText = "📍 Vybraná pozice: " + kliknuteLatLng.lat.toFixed(2) + ", " + kliknuteLatLng.lng.toFixed(2);
+  box.style.display = "block";
+
+  setTimeout(() => {
+    box.style.display = "none";
+  }, 3000);
+});
+
+function smazatUdalost(klic) {
+  firebase.database().ref("udalosti/" + klic).remove().then(() => {
+    const firebaseBox = document.getElementById("firebase-box");
+    firebaseBox.innerText = "🗑️ Událost byla úspěšně smazána!";
+    firebaseBox.style.background = "rgba(200,0,0,0.85)";
+    firebaseBox.style.display = "block";
+
+    setTimeout(() => {
+      firebaseBox.style.display = "none";
+      firebaseBox.style.background = "rgba(0,128,0,0.85)";
+    }, 3000);
+
+    // ⏪ Znovu načti tabulku po smazání
+    firebase.database().ref("udalosti").once("value").then(snapshot => {
+      const data = snapshot.val();
+      const keys = Object.keys(data || {}).reverse();
+      const udalosti = Object.values(data || {}).reverse();
+      zobrazTabulku(udalosti, keys);
+    });
+  });
+}
+
+
+function zobrazPoznamku(text) {
+  console.log("📝 Zobrazuji poznámku:", text); // Debug
+  document.getElementById("poznamka-text").innerText = text;
+  document.getElementById("poznamka-modal").style.display = "flex";
+}
+
+function zavritPoznamku() {
+  document.getElementById("poznamka-modal").style.display = "none";
+}
+
+window.speechSynthesis.onvoiceschanged = () => {
+  window.availableVoices = speechSynthesis.getVoices();
+};
+
+function pridatUdalost() {
+  const nazev = document.getElementById('nazev').value;
+  const typ = document.getElementById('typ').value;
+  const stav = document.getElementById('stav').value;
+  const poznamka = document.getElementById('poznamka').value;
+  const ulice = document.getElementById("ulice").value;
+  const mesto = document.getElementById("mesto").value;
+
+  const jednotky = [];
+  if (document.getElementById('pcr').checked) jednotky.push("PČR");
+  if (document.getElementById('rza').checked) jednotky.push("RZA");
+  if (document.getElementById('t815').checked) jednotky.push("T-815");
+  if (document.getElementById('cas20').checked) jednotky.push("CAS 20");
+  if (document.getElementById('cas30').checked) jednotky.push("CAS 30");
+  if (document.getElementById('az30').checked) jednotky.push("AZ 30-S2Z");
+
+  if (jednotky.length === 0) {
+    const firebaseBox = document.getElementById("firebase-box");
+    firebaseBox.innerText = "⛔ Musíš vybrat alespoň jednu jednotku (HZS, JSDH, PČR, ZZS)";
+    firebaseBox.style.background = "rgba(200,0,0,0.85)";
+    firebaseBox.style.display = "block";
+    setTimeout(() => {
+      firebaseBox.style.display = "none";
+      firebaseBox.style.background = "rgba(0,128,0,0.85)";
+    }, 3000);
+    return;
+  }
+
+  if (!kliknuteLatLng) {
+    const firebaseBox = document.getElementById("firebase-box");
+    firebaseBox.innerText = "⛔ Musíš nejdřív kliknout na mapu!";
+    firebaseBox.style.background = "rgba(200,0,0,0.85)";
+    firebaseBox.style.display = "block";
+    setTimeout(() => {
+      firebaseBox.style.display = "none";
+      firebaseBox.style.background = "rgba(0,128,0,0.85)";
+    }, 3000);
+    return;
+  }
+
+  const typText = {
+    "P": "Požár",
+    "DN": "Dopravní nehoda",
+    "TP": "Technická pomoc",
+    "ZOZ": "Záchrana osob a zvířat",
+    "UNL": "Únik nebezpečných látek",
+    "POP": "Poplach",
+    "OST": "Ostatní událost"
+  };
+
+  const hlaseniText = `Pozor poplach! Nová událost. ${typText[typ] || nazev} Ulice ${ulice} ${mesto}. ${typText[typ] || nazev} ${poznamka || "bez poznámky"}. Vyjede: ${jednotky.join(", ")}.`;
+
+  if (typ === "POP") {
+    console.log("📡 Pokus o zápis do poplach...");
+    firebase.database().ref("poplach").set({
+      cas: Date.now(),
+      text: hlaseniText
+    })
+    .then(() => {
+      console.log("✅ Poplach zapsán!");
+    })
+    .catch(err => {
+      console.error("❌ Chyba při zápisu do poplach:", err);
+    });
+
+    setTimeout(() => {
+      firebase.database().ref("poplach").remove();
+    }, 5000);
+  }
+
+  kanal.postMessage({
+    typ: "hlaseni",
+    text: hlaseniText,
+    odesilatel: mojeId
+  });
+
+const zvuk = document.getElementById("zvuk-udalosti");
+zvuk.muted = false;
+zvuk.currentTime = 0;
+zvuk.play();
+
+// ⏳ Po skončení první sirény → hlas
+zvuk.onended = () => {
+  zvuk.onended = null; // ⛔ Zabrání opakování
+
+  const hlaseni = new SpeechSynthesisUtterance(hlaseniText);
+  hlaseni.lang = "cs-CZ";
+  hlaseni.rate = 0.95;
+  hlaseni.pitch = 0.9;
+  hlaseni.volume = 1;
+
+  const ceskyHlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
+  if (ceskyHlas) hlaseni.voice = ceskyHlas;
+
+  // ✅ Po skončení hlasu → druhá siréna
+  hlaseni.onend = () => {
+    speechSynthesis.cancel(); // pro jistotu
+    zvuk.currentTime = 0;
+    zvuk.play();
+  };
+
+  speechSynthesis.speak(hlaseni);
+};
+
+
+
+  const casVyhlaseni = new Date().toLocaleString("cs-CZ", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  const marker = L.marker([kliknuteLatLng.lat, kliknuteLatLng.lng], {
+    icon: ikony[typ]
+  }).addTo(map);
+
+  marker.bindPopup(
+    `<div style="font-size:1.3em; font-weight:bold; margin-bottom:5px;">${nazev}</div>
+     <div><strong>Čas:</strong> ${casVyhlaseni}</div>
+     <div><strong>Adresa:</strong> ${ulice}, ${mesto}</div>
+     <div><strong>Jednotky:</strong> ${jednotky.join(", ")}</div>
+     <div><i>${poznamka}</i></div>`
+  ).openPopup();
+
+  firebase.database().ref("udalosti").push({
+    casVyhlaseni,
+    nazev,
+    typ,
+    ulice,
+    mesto,
+    stav,
+    poznamka,
+    jednotky: jednotky.join(", "),
+    lat: kliknuteLatLng.lat,
+    lng: kliknuteLatLng.lng
+  }).then(() => {
+    const firebaseBox = document.getElementById("firebase-box");
+    firebaseBox.innerText = "✅ Událost byla úspěšně přidána!";
+    firebaseBox.style.display = "block";
+    setTimeout(() => {
+      firebaseBox.style.display = "none";
+    }, 3000);
+
+    firebase.database().ref("udalosti").once("value").then(snapshot => {
+      const data = snapshot.val();
+      const keys = Object.keys(data || {}).reverse();
+      const udalosti = Object.values(data || {}).reverse();
+      zobrazTabulku(udalosti, keys);
+    });
+  });
+}
+
+
+function zobrazTabulku(udalosti, keys) {
+  const thead = document.querySelector("#tabulka thead");
+  thead.innerHTML = `
+    <tr>
+      <th>Čas</th>
+      <th>Název</th>
+      <th>Typ</th>
+      <th>Ulice</th>
+      <th>Město</th>
+      <th>Stav</th>
+      <th>Jednotky</th>
+      <th>Popis události</th>
+      ${prihlaseny ? "<th>Akce</th>" : ""}
+    </tr>
+  `;
+
+  const tbody = document.querySelector("#tabulka tbody");
+  tbody.innerHTML = "";
+
+  udalosti.forEach((u, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.casVyhlaseni || "-"}</td>
+      <td>${u.nazev}</td>
+      <td>${u.typ}</td>
+      <td>${u.ulice || "-"}</td>
+      <td>${u.mesto || "-"}</td>
+      <td>
+        ${prihlaseny ? `
+          <select onchange="aktualizujStav(this.value, ${index})">
+            <option ${u.stav === "Přijatá, SaP na cestě" ? "selected" : ""}>Přijatá, SaP na cestě</option>
+            <option ${u.stav === "Otevřená, SaP na místě" ? "selected" : ""}>Otevřená, SaP na místě</option>
+            <option ${u.stav === "Lokalizace" ? "selected" : ""}>Lokalizace</option>
+            <option ${u.stav === "Likvidace" ? "selected" : ""}>Likvidace</option>
+            <option ${u.stav === "Převzatá VZ" ? "selected" : ""}>Převzatá VZ</option>
+            <option ${u.stav === "Převzatá PČR" ? "selected" : ""}>Převzatá PČR</option>
+            <option ${u.stav === "Uzavřená OS" ? "selected" : ""}>Uzavřená OS</option>
+          </select>
+        ` : `<span>${u.stav}</span>`}
+      </td>
+      <td>${u.jednotky || "-"}</td>
+      <td>
+        ${u.poznamka
+          ? `${u.poznamka.length > 10
+              ? `${u.poznamka.slice(0, 13)}... <span class="info-icon" onclick="zobrazPoznamku('${u.poznamka}')">ℹ️</span>`
+              : u.poznamka}`
+          : "-"}
+      </td>
+      ${prihlaseny ? `<td><button onclick="smazatUdalost('${keys[index]}')">🗑️</button></td>` : ""}
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+
+function vygenerujAdresu() {
+  const uliceSeznam = [
+    "Masarykova", "Dlouhá", "Komenského", "Husova", "Školní",
+    "Nádražní", "Jiráskova", "Palackého", "Smetanova", "Tyršova",
+    "Na Výsluní", "Pod Páteří", "U Lesa", "Kpt. Jaroše", "U Hřiště", "Zahradní", "Cimrmanova", "Slunečná", "Politická",
+  ];
+
+  const mestaSeznam = [
+    "Ústí nad Labem", "Praha", "Klášterec nad Ohří", "Teplice", "Děčín", "Litoměřice", "Most",
+    "Chomutov", "Louny", "Roudnice nad Labem", "Bílina", "Žatec", "Praha 2", "Praha 3", "Praha 4", "Brno", "Ostrava"
+  ];
+
+  const nahodnaUlice = uliceSeznam[Math.floor(Math.random() * uliceSeznam.length)];
+  const nahodneCislo = Math.floor(Math.random() * 200) + 1;
+  const nahodneMesto = mestaSeznam[Math.floor(Math.random() * mestaSeznam.length)];
+
+  document.getElementById("ulice").value = `${nahodnaUlice} ${nahodneCislo}`;
+  document.getElementById("mesto").value = nahodneMesto;
+}
+
+function aktualizujStav(novyStav, index) {
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ stav: novyStav });
+  });
+}
+
+function aktualizujStav(novyStav, index) {
+  if (!prihlaseny) {
+    alert("⛔ Jen správce může měnit stav události.");
+    return;
+  }
+
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ stav: novyStav });
+  });
+}
+
+function aktualizujPoznamku(novaPoznamka, index) {
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ poznamka: novaPoznamka });
+  });
+}
+
+function vymazatUdalosti() {
+  if (confirm("Opravdu chceš smazat všechny události?")) {
+    firebase.database().ref("udalosti").remove().then(() => {
+      alert("✅ Všechny události byly smazány.");
+      location.reload();
+    });
+  }
+}
+
+let prihlaseny = false; // ← musí být globálně
+
+function overitHeslo() {
+  const heslo = document.getElementById("heslo").value;
+  if (heslo === "HZSJSDHFIVEPD") {
+    prihlaseny = true;
+    document.getElementById("form-box").style.display = "block";
+    document.getElementById("heslo-box").style.display = "none";
+    vygenerujAdresu();
+
+    // ⏪ Znovu načti tabulku s tlačítky 🗑️
+    firebase.database().ref("udalosti").once("value").then(snapshot => {
+      const data = snapshot.val();
+      const keys = Object.keys(data || {}).reverse();
+      const udalosti = Object.values(data || {}).reverse();
+      zobrazTabulku(udalosti, keys);
+    });
+
+  } else {
+    const firebaseBox = document.getElementById("firebase-box");
+    firebaseBox.innerText = "⛔ Špatné heslo. Přístup zamítnut.";
+    firebaseBox.style.background = "rgba(200,0,0,0.85)";
+    firebaseBox.style.display = "block";
+
+    setTimeout(() => {
+      firebaseBox.style.display = "none";
+      firebaseBox.style.background = "rgba(0,128,0,0.85)";
+    }, 5000);
+  }
+}
+
+
+function ulozitAOdhlasit() {
+  const firebaseBox = document.getElementById("firebase-box");
+  firebaseBox.innerText = "💾 Změny byly uloženy.";
+  firebaseBox.style.background = "rgba(0,128,0,0.85)";
+  firebaseBox.style.display = "block";
+
+  setTimeout(() => {
+    firebaseBox.style.display = "none";
+  }, 3000);
+
+  prihlaseny = false;
+  document.getElementById("form-box").style.display = "none";
+  document.getElementById("heslo-box").style.display = "block";
+
+  // ⏪ Znovu načti tabulku bez práv správce
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const udalosti = Object.values(data || {}).reverse();
+    zobrazTabulku(udalosti, keys);
+  });
+}
+
+window.onload = function () {
+  // ✅ Aktivace hlasového enginu po prvním kliknutí
+  document.body.addEventListener("click", () => {
+    const dummy = new SpeechSynthesisUtterance("");
+    speechSynthesis.speak(dummy);
+
+    const zvuk = document.getElementById("zvuk-udalosti");
+    if (zvuk) {
+      zvuk.muted = false;
+      zvuk.play().catch(() => {});
+      zvuk.pause();
+      zvuk.currentTime = 0;
+    }
+  }, { once: true });
+
+  // 🔔 Posluchač na poplach z Firebase
+  let posledniPoplachCas = 0;
+  firebase.database().ref("poplach").on("value", snap => {
+    const data = snap.val();
+    if (!data || data.cas === posledniPoplachCas) return;
+    posledniPoplachCas = data.cas;
+
+    const zvuk = document.getElementById("zvuk-udalosti");
+    if (zvuk) {
+      zvuk.muted = false;
+      zvuk.currentTime = 0;
+      zvuk.play();
+    }
+
+    const hlaseni = new SpeechSynthesisUtterance(data.text);
+    hlaseni.lang = "cs-CZ";
+    const hlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
+    if (hlas) hlaseni.voice = hlas;
+    speechSynthesis.speak(hlaseni);
+
+    // 🧼 Automatické vymazání poplachu po 5 sekundách
+    setTimeout(() => {
+      firebase.database().ref("poplach").remove();
+    }, 5000);
+  });
+
+  // 🔁 Načtení dat z Firebase
+  firebase.database().ref("udalosti").on("value", snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const udalosti = Object.values(data || {}).reverse();
+
+    // Zobraz markery na mapě
+    udalosti.forEach(u => {
+      const marker = L.marker([u.lat, u.lng], { icon: ikony[u.typ] }).addTo(map);
+      marker.bindPopup(
+        `<div style="font-size:1.4em; font-weight:bold; margin-bottom:5px;">${u.nazev}</div>
+         <div><strong>Čas:</strong> ${u.casVyhlaseni}</div>
+         <div><strong>Typ:</strong> ${u.typ}</div>
+         <div><strong>Stav:</strong> ${u.stav}</div>
+         <div><strong>Adresa:</strong> ${u.ulice}, ${u.mesto}</div>
+         <div><strong>Jednotky:</strong> ${u.jednotky}</div>
+         <div><i>${u.poznamka}</i></div>`
+      );
+    });
+
+    zobrazTabulku(udalosti, keys);
+  });
+};
+
+
+
+  setTimeout(() => {
+    location.reload();
+  }, 320000); // 3 minuty
+</script>
+</body>
+</html>
