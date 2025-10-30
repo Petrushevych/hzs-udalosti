@@ -344,7 +344,6 @@ body, html {
   </select>
 </div>
 
-  
 <label>Ulice + č. p. (automaticky):</label>
 <input type="text" id="ulice" style="background-color: #f0f0f0;">
 
@@ -894,39 +893,6 @@ function vygenerujAdresu() {
     "Chomutov", "Louny", "Roudnice nad Labem", "Bílina", "Žatec", "Praha 2", "Praha 3", "Praha 4", "Brno", "Ostrava"
   ];
 
-const podtypyMap = {
-  "P": ["NÍZKÉ BUDOVY", "VÝŠKOVÉ BUDOVY"],
-  "DN": ["VYPROŠTĚNÍ OSOB"],
-  "TP": ["SPOLUPRÁCE SE SLOŽKAMI IZS"],
-  "ZOZ": ["Z VÝŠKY"],
-  "UNL": ["NA POZEMNÍ KOMUNIKACI"],
-  "POP": ["PLANÝ POPLACH"],
-  "OST": ["JINÉ"]
-};
-
-document.getElementById("typ").addEventListener("change", function () {
-  const typ = this.value;
-  const podtypSelect = document.getElementById("podtyp");
-  const podtypBox = document.getElementById("podtyp-box");
-  const rozsahBox = document.getElementById("rozsah-box");
-
-  if (podtypyMap[typ]) {
-    podtypBox.style.display = "block";
-    podtypSelect.innerHTML = '<option value="">-- Vyber podtyp --</option>';
-    podtypyMap[typ].forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p;
-      opt.textContent = p;
-      podtypSelect.appendChild(opt);
-    });
-  } else {
-    podtypBox.style.display = "none";
-    podtypSelect.innerHTML = "";
-  }
-
-  rozsahBox.style.display = typ === "P" ? "block" : "none";
-});
-
   const nahodnaUlice = uliceSeznam[Math.floor(Math.random() * uliceSeznam.length)];
   const nahodneCislo = Math.floor(Math.random() * 200) + 1;
   const nahodneMesto = mestaSeznam[Math.floor(Math.random() * mestaSeznam.length)];
@@ -1050,6 +1016,14 @@ function overitHeslo() {
     document.getElementById("form-box").style.display = "block";
     document.getElementById("heslo-box").style.display = "none";
     vygenerujAdresu();
+    
+    setTimeout(() => {
+      const typSelect = document.getElementById("typ");
+      if (typSelect) {
+        const event = new Event("change");
+        typSelect.dispatchEvent(event);
+      }
+    }, 100);
 
     // ⏪ Znovu načti tabulku s tlačítky 🗑️
     firebase.database().ref("udalosti").once("value").then(snapshot => {
@@ -1123,6 +1097,40 @@ window.onload = function () {
 
     console.log("🔓 Zvuk a hlas odemčen pro Chrome/Safari");
   }, { once: true });
+
+
+const podtypyMap = {
+  "P": ["NÍZKÉ BUDOVY", "VÝŠKOVÉ BUDOVY"],
+  "DN": ["VYPROŠTĚNÍ OSOB"],
+  "TP": ["SPOLUPRÁCE SE SLOŽKAMI IZS"],
+  "ZOZ": ["Z VÝŠKY"],
+  "UNL": ["NA POZEMNÍ KOMUNIKACI"],
+  "POP": ["PLANÝ POPLACH"],
+  "OST": ["JINÉ"]
+};
+
+document.getElementById("typ").addEventListener("change", function () {
+  const typ = this.value;
+  const podtypSelect = document.getElementById("podtyp");
+  const podtypBox = document.getElementById("podtyp-box");
+  const rozsahBox = document.getElementById("rozsah-box");
+
+  if (podtypyMap[typ]) {
+    podtypBox.style.display = "block";
+    podtypSelect.innerHTML = '<option value="">-- Vyber podtyp --</option>';
+    podtypyMap[typ].forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      podtypSelect.appendChild(opt);
+    });
+  } else {
+    podtypBox.style.display = "none";
+    podtypSelect.innerHTML = "";
+  }
+
+  rozsahBox.style.display = typ === "P" ? "block" : "none";
+});
 
   // 🔔 Posluchač na poplach z Firebase
   let posledniPoplachCas = 0;
