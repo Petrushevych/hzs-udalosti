@@ -782,94 +782,85 @@ function zobrazTabulku(udalosti, keys) {
 
 udalosti.forEach((u, index) => {
   const tr = document.createElement("tr");
-  tr.innerHTML = `
-  <td>${u.casVyhlaseni || "-"}</td>
-  <td>
-    ${prihlaseny ? `
-      <input type="text" value="${u.nazev}" onchange="aktualizujNazev(this.value, ${index})" style="width:120px;">
-    ` : u.nazev}
-  </td>
-  <td>
-    ${prihlaseny ? `
-      <select onchange="aktualizujTyp(this.value, ${index})">
-        <option value="P" ${u.typ === "P" ? "selected" : ""}>Požár</option>
-        <option value="DN" ${u.typ === "DN" ? "selected" : ""}>Dopravní nehoda</option>
-        <option value="TP" ${u.typ === "TP" ? "selected" : ""}>Technická pomoc</option>
-        <option value="ZOZ" ${u.typ === "ZOZ" ? "selected" : ""}>Záchrana osob a zvířat</option>
-        <option value="UNL" ${u.typ === "UNL" ? "selected" : ""}>Únik nebezpečných látek</option>
-        <option value="POP" ${u.typ === "POP" ? "selected" : ""}>Poplach</option>
-        <option value="OST" ${u.typ === "OST" ? "selected" : ""}>Ostatní</option>
-      </select>
-    ` : u.typ}
-  </td>
-  
-  <!-- Ppodtyp -->
-  <td>
-    ${prihlaseny ? `
-      <select onchange="aktualizujPodtyp(this.value, ${index})">
-        <option value="">--</option>
-        <option value="NÍZKÉ BUDOVY" ${u.podtyp === "NÍZKÉ BUDOVY" ? "selected" : ""}>NÍZKÉ BUDOVY</option>
-        <option value="VÝŠKOVÉ BUDOVY" ${u.podtyp === "VÝŠKOVÉ BUDOVY" ? "selected" : ""}>VÝŠKOVÉ BUDOVY</option>
-        <option value="VYPROŠTĚNÍ OSOB" ${u.podtyp === "VYPROŠTĚNÍ OSOB" ? "selected" : ""}>VYPROŠTĚNÍ OSOB</option>
-        <option value="SPOLUPRÁCE SE SLOŽKAMI IZS" ${u.podtyp === "SPOLUPRÁCE SE SLOŽKAMI IZS" ? "selected" : ""}>SPOLUPRÁCE SE SLOŽKAMI IZS</option>
-        <option value="Z VÝŠKY" ${u.podtyp === "Z VÝŠKY" ? "selected" : ""}>Z VÝŠKY</option>
-        <option value="NA POZEMNÍ KOMUNIKACI" ${u.podtyp === "NA POZEMNÍ KOMUNIKACI" ? "selected" : ""}>NA POZEMNÍ KOMUNIKACI</option>
-        <option value="PLANÝ POPLACH" ${u.podtyp === "PLANÝ POPLACH" ? "selected" : ""}>PLANÝ POPLACH</option>
-        <option value="JINÉ" ${u.podtyp === "JINÉ" ? "selected" : ""}>JINÉ</option>
-      </select>
-    ` : u.podtyp || "-"}
-  </td>
-  
-  <!-- Rozsah -->
-  <td>
-    ${prihlaseny ? `
-      <select onchange="aktualizujRozsah(this.value, ${index})">
-        <option value="">--</option>
-        <option value="I. Stupeň" ${u.rozsah === "I. Stupeň" ? "selected" : ""}>I. Stupeň</option>
-        <option value="II. Stupeň" ${u.rozsah === "II. Stupeň" ? "selected" : ""}>II. Stupeň</option>
-        <option value="III. Stupeň" ${u.rozsah === "III. Stupeň" ? "selected" : ""}>III. Stupeň</option>
-        <option value="Zvláštní stupeň" ${u.rozsah === "Zvláštní stupeň" ? "selected" : ""}>Zvláštní stupeň</option>
-      </select>
-    ` : u.rozsah || "-"}
-  </td>
-  
-  <td>${u.ulice || "-"}</td>
-  <td>${u.mesto || "-"}</td>
-<td>
-  ${prihlaseny ? `
-    <select onchange="aktualizujStav(this.value, ${index})">
-      <option ${u.stav === "Přijatá, SaP na cestě" ? "selected" : ""}>Přijatá, SaP na cestě</option>
-      <option ${u.stav === "Otevřená, SaP na místě" ? "selected" : ""}>Otevřená, SaP na místě</option>
-      <option ${u.stav === "Lokalizace" ? "selected" : ""}>Lokalizace</option>
-      <option ${u.stav === "Likvidace" ? "selected" : ""}>Likvidace</option>
-      <option ${u.stav === "Převzatá VZ" ? "selected" : ""}>Převzatá VZ</option>
-      <option ${u.stav === "Převzatá PČR" ? "selected" : ""}>Převzatá PČR</option>
-      <option ${u.stav === "Uzavřená OS" ? "selected" : ""}>Uzavřená OS</option>
+
+  const podtypy = podtypyMap[u.typ] || [];
+  const vsechnyPodtypy = podtypy.includes(u.podtyp) ? podtypy : [u.podtyp, ...podtypy].filter(p => p);
+  const podtypSelectHTML = `
+    <select onchange="aktualizujPodtyp(this.value, ${index})">
+      <option value="">--</option>
+      ${vsechnyPodtypy.map(p => `<option value="${p}" ${u.podtyp === p ? "selected" : ""}>${p}</option>`).join("")}
     </select>
-  ` : `<span>${u.stav}</span>`}
-</td>
-<td>
-  ${prihlaseny ? `
-    <div style="display:flex; flex-wrap:wrap; gap:5px;">
-      ${["PČR", "ZZS", "VEA", "DA", "T-815", "CAS 15", "CAS 20", "CAS 20", "CAS 30", "AZ 30-S2Z", "VYA"].map(j =>
-        `<label><input type="checkbox" onchange="aktualizujJednotkyCheckbox('${j}', ${index}, this.checked)" ${u.jednotky.includes(j) ? "checked" : ""}> ${j}</label>`
-      ).join("")}
-    </div>
-  ` : u.jednotky || "-"}
-</td>
-<td>
-  ${prihlaseny ? `
-    <textarea onchange="aktualizujPoznamku(this.value, ${index})" style="width:180px; height:50px;">${u.poznamka || ""}</textarea>
-  ` : (
-    u.poznamka
-      ? `${u.poznamka.length > 10
-          ? `${u.poznamka.slice(0, 13)}... <span class="info-icon" onclick="zobrazPoznamku('${u.poznamka}')">ℹ️</span>`
-          : u.poznamka}`
-      : "-"
-  )}
-</td>
-${prihlaseny ? `<td><button onclick="smazatUdalost('${keys[index]}')">🗑️</button></td>` : ""}
-`;
+  `;
+
+  const rozsahSelectHTML = `
+    <select onchange="aktualizujRozsah(this.value, ${index})">
+      <option value="">--</option>
+      <option value="I. Stupeň" ${u.rozsah === "I. Stupeň" ? "selected" : ""}>I. Stupeň</option>
+      <option value="II. Stupeň" ${u.rozsah === "II. Stupeň" ? "selected" : ""}>II. Stupeň</option>
+      <option value="III. Stupeň" ${u.rozsah === "III. Stupeň" ? "selected" : ""}>III. Stupeň</option>
+      <option value="Zvláštní stupeň" ${u.rozsah === "Zvláštní stupeň" ? "selected" : ""}>Zvláštní stupeň</option>
+    </select>
+  `;
+
+  tr.innerHTML = `
+    <td>${u.casVyhlaseni || "-"}</td>
+    <td>
+      ${prihlaseny ? `
+        <input type="text" value="${u.nazev}" onchange="aktualizujNazev(this.value, ${index})" style="width:120px;">
+      ` : u.nazev}
+    </td>
+    <td>
+      ${prihlaseny ? `
+        <select onchange="aktualizujTyp(this.value, ${index})">
+          <option value="P" ${u.typ === "P" ? "selected" : ""}>Požár</option>
+          <option value="DN" ${u.typ === "DN" ? "selected" : ""}>Dopravní nehoda</option>
+          <option value="TP" ${u.typ === "TP" ? "selected" : ""}>Technická pomoc</option>
+          <option value="ZOZ" ${u.typ === "ZOZ" ? "selected" : ""}>Záchrana osob a zvířat</option>
+          <option value="UNL" ${u.typ === "UNL" ? "selected" : ""}>Únik nebezpečných látek</option>
+          <option value="POP" ${u.typ === "POP" ? "selected" : ""}>Poplach</option>
+          <option value="OST" ${u.typ === "OST" ? "selected" : ""}>Ostatní</option>
+        </select>
+      ` : u.typ}
+    </td>
+    <td>${prihlaseny ? podtypSelectHTML : u.podtyp || "-"}</td>
+    <td>${prihlaseny ? rozsahSelectHTML : u.rozsah || "-"}</td>
+    <td>${u.ulice || "-"}</td>
+    <td>${u.mesto || "-"}</td>
+    <td>
+      ${prihlaseny ? `
+        <select onchange="aktualizujStav(this.value, ${index})">
+          <option ${u.stav === "Přijatá, SaP na cestě" ? "selected" : ""}>Přijatá, SaP na cestě</option>
+          <option ${u.stav === "Otevřená, SaP na místě" ? "selected" : ""}>Otevřená, SaP na místě</option>
+          <option ${u.stav === "Lokalizace" ? "selected" : ""}>Lokalizace</option>
+          <option ${u.stav === "Likvidace" ? "selected" : ""}>Likvidace</option>
+          <option ${u.stav === "Převzatá VZ" ? "selected" : ""}>Převzatá VZ</option>
+          <option ${u.stav === "Převzatá PČR" ? "selected" : ""}>Převzatá PČR</option>
+          <option ${u.stav === "Uzavřená OS" ? "selected" : ""}>Uzavřená OS</option>
+        </select>
+      ` : `<span>${u.stav}</span>`}
+    </td>
+    <td>
+      ${prihlaseny ? `
+        <div style="display:flex; flex-wrap:wrap; gap:5px;">
+          ${["PČR", "ZZS", "VEA", "DA", "T-815", "CAS 15", "CAS 20", "CAS 30", "AZ 30-S2Z", "VYA"].map(j =>
+            `<label><input type="checkbox" onchange="aktualizujJednotkyCheckbox('${j}', ${index}, this.checked)" ${u.jednotky.includes(j) ? "checked" : ""}> ${j}</label>`
+          ).join("")}
+        </div>
+      ` : u.jednotky || "-"}
+    </td>
+    <td>
+      ${prihlaseny ? `
+        <textarea onchange="aktualizujPoznamku(this.value, ${index})" style="width:180px; height:50px;">${u.poznamka || ""}</textarea>
+      ` : (
+        u.poznamka
+          ? `${u.poznamka.length > 10
+              ? `${u.poznamka.slice(0, 13)}... <span class="info-icon" onclick="zobrazPoznamku('${u.poznamka}')">ℹ️</span>`
+              : u.poznamka}`
+          : "-"
+      )}
+    </td>
+    ${prihlaseny ? `<td><button onclick="smazatUdalost('${keys[index]}')">🗑️</button></td>` : ""}
+  `;
   tbody.appendChild(tr);
 
     // 📍 Vykreslení markeru na mapu + uložení do aktivniMarkery
