@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta charset="UTF-8">
   <title>Události HZS FIVEPD</title>
   <link rel="icon" type="image/png" href="favicon.png">
@@ -14,6 +14,21 @@ html, body {
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
+}
+
+body, html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#firebase-box {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  max-width: 100%;
+  font-size: 16px;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 #form-box button {
@@ -237,7 +252,54 @@ html, body {
         max-height: none;
         overflow: visible;
       }
-    }
+    
+    @media screen and (max-width: 600px) {
+  #firebase-box {
+    font-size: 1.1em;
+    padding: 12px 20px;
+    max-width: 90vw;
+    white-space: normal;
+  }
+
+  #poznamka-box {
+    font-size: 1.2em;
+    max-width: 90vw;
+    white-space: normal;
+    overflow-x: hidden;
+    text-align: center;
+  }
+
+  #pozice-box {
+    font-size: 1.2em;
+    padding: 12px 20px;
+    max-width: 90vw;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .modal-content {
+    font-size: 1em;
+    padding: 16px 20px;
+  }
+
+  #form-box label,
+  #form-box input,
+  #form-box select,
+  #form-box button {
+    font-size: 0.95em;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .radek-jednotky label {
+    font-size: 0.9em;
+    flex: 1 1 45%;
+  }
+
+  table, th, td {
+    font-size: 0.85em;
+  }
+}
   </style>
 </head>
 <body>
@@ -282,16 +344,24 @@ html, body {
 <div class="radek-jednotky">
   <span class="popisek">Jednotky na místě:</span>
   <label><input type="checkbox" id="pcr"> PČR</label>
-  <label><input type="checkbox" id="rza"> RZA</label>
-  <label><input type="checkbox" id="t815"> T-815</label>
-  <label><input type="checkbox" id="cas20"> CAS 20</label>
-  <label><input type="checkbox" id="cas30"> CAS 30</label>
-  <label><input type="checkbox" id="az30"> AZ 30-S2Z</label>
+  <label><input type="checkbox" id="zzs"> ZZS</label>
+  <label><input type="checkbox" id="vea"> VEA</label>
+  <label><input type="checkbox" id="ta"> TA</label>
+  <label><input type="checkbox" id="da"> DA</label>
+  <label><input type="checkbox" id="t815"> HSA 241</label>
+  <label><input type="checkbox" id="t148"> HSA 242</label>
+  <label><input type="checkbox" id="cas20"> PSA 101</label>
+  <label><input type="checkbox" id="cas30"> PSA 102</label>
+  <label><input type="checkbox" id="az30"> PSA 103</label>
+  <label><input type="checkbox" id="rza"> PSA 106</label>
+  <label><input type="checkbox" id="cas202"> PSA 107</label>
+  <label><input type="checkbox" id="cas15"> PSA 117</label>
+  <label><input type="checkbox" id="vya"> VYA</label>
 </div>
   <button onclick="pridatUdalost()">Přidat událost</button>
   <button onclick="vymazatUdalosti()">🗑️ Vymazat události</button>
-  <button onclick="window.print()">🖨️ Vytisknout</button>
   <button onclick="ulozitAOdhlasit()">💾 Uložit a odhlásit</button>
+  <button onclick="window.print()">🖨️Tisk</button>
   </div>
 
 <div id="udalosti">
@@ -325,7 +395,7 @@ html, body {
 </div>
 
 <div id="firebase-box"></div>
-<audio id="zvuk-udalosti" src="https://files.catbox.moe/c0duwl.mp3"></audio>
+<audio id="zvuk-udalosti" src="https://files.catbox.moe/qpxrgp.mp3"></audio>
 
 <div id="pozice-box"></div>
 
@@ -340,65 +410,71 @@ html, body {
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAf1s7JPna788ymY3ZmnQj6yEIM3H201cQ",
-    authDomain: "udalosti-hzs-fivepd.firebaseapp.com",
-    databaseURL: "https://udalosti-hzs-fivepd-default-rtdb.firebaseio.com",
-    projectId: "udalosti-hzs-fivepd",
-    storageBucket: "udalosti-hzs-fivepd.appspot.com",
-    messagingSenderId: "1032416028363",
-    appId: "1:1032416028363:web:f150ad103ea19b9f7e9d4e"
-  };
+// 🔥 Firebase konfigurace
+const firebaseConfig = {
+  apiKey: "AIzaSyAf1s7JPna788ymY3ZmnQj6yEIM3H201cQ",
+  authDomain: "udalosti-hzs-fivepd.firebaseapp.com",
+  databaseURL: "https://udalosti-hzs-fivepd-default-rtdb.firebaseio.com",
+  projectId: "udalosti-hzs-fivepd",
+  storageBucket: "udalosti-hzs-fivepd.appspot.com",
+  messagingSenderId: "1032416028363",
+  appId: "1:1032416028363:web:f150ad103ea19b9f7e9d4e"
+};
 
-  firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
+
+// 📡 Komunikační kanál
 const kanal = new BroadcastChannel("udalosti-kanal");
 const mojeId = Math.random().toString(36).substr(2, 9);
 
-// Aktivace hlasového enginu
+// 🗣️ Aktivace hlasového enginu
 window.speechSynthesis.onvoiceschanged = () => {
   window.availableVoices = speechSynthesis.getVoices();
 };
 
+// 🔊 Funkce pro přehrání sekvence siréna → hlas → siréna
+function prehratSekvenci(text) {
+  const zvuk = document.getElementById("zvuk-udalosti");
+  if (!zvuk) return;
 
-// Aktivace hlasového enginu
-window.speechSynthesis.onvoiceschanged = () => {
-  window.availableVoices = speechSynthesis.getVoices();
-    }
-    
-// Posluchač pro příchozí hlášení
+  zvuk.muted = false;
+  zvuk.currentTime = 0;
+
+  // 🧠 Nastavíme onended pokaždé
+  zvuk.onended = () => {
+    zvuk.onended = null;
+
+    const hlaseni = new SpeechSynthesisUtterance(text);
+    hlaseni.lang = "cs-CZ";
+    hlaseni.rate = 0.85;
+    hlaseni.pitch = 1;
+    hlaseni.volume = 1;
+
+    const ceskyHlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
+    if (ceskyHlas) hlaseni.voice = ceskyHlas;
+
+    hlaseni.onend = () => {
+      setTimeout(() => {
+        zvuk.currentTime = 0;
+        zvuk.play();
+      }, 100); // malá prodleva pro jistotu
+    };
+
+    speechSynthesis.speak(hlaseni);
+  };
+
+  // 🔊 Spustíme první sirénu
+  zvuk.play();
+}
+
+
+// 📥 Posluchač pro příchozí hlášení
 kanal.onmessage = (event) => {
   if (event.data.typ === "hlaseni" && event.data.odesilatel !== mojeId) {
-    const zvuk = document.getElementById("zvuk-udalosti");
-    if (!zvuk) return;
-
-    zvuk.muted = false;
-    zvuk.currentTime = 0;
-    zvuk.play();
-
-    zvuk.onended = () => {
-      zvuk.onended = null;
-
-      const hlaseni = new SpeechSynthesisUtterance(event.data.text);
-      hlaseni.lang = "cs-CZ";
-      hlaseni.rate = 0.95;
-      hlaseni.pitch = 0.9;
-      hlaseni.volume = 1;
-
-      const ceskyHlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
-      if (ceskyHlas) hlaseni.voice = ceskyHlas;
-
-      // Po skončení hlasu → druhá siréna
-      hlaseni.onend = () => {
-        setTimeout(() => {
-          zvuk.currentTime = 0;
-          zvuk.play();
-        }, 100); // malá prodleva pro jistotu
-      };
-
-      speechSynthesis.speak(hlaseni);
-    };
+    prehratSekvenci(event.data.text);
   }
 };
+
 
 
   const map = L.map('map', {
@@ -435,6 +511,7 @@ const mestaSeznam = [
 ];
 
   let kliknuteLatLng = null;
+const aktivniMarkery = {}; // ← Uchovává markery podle jejich Firebase klíče
 
 map.on('click', function(e) {
   kliknuteLatLng = e.latlng;
@@ -448,7 +525,15 @@ map.on('click', function(e) {
   }, 3000);
 });
 
+
 function smazatUdalost(klic) {
+  // 🧹 Odstranění markeru z mapy
+  if (aktivniMarkery[klic]) {
+    map.removeLayer(aktivniMarkery[klic]);
+    delete aktivniMarkery[klic];
+  }
+
+  // 🔥 Smazání z Firebase
   firebase.database().ref("udalosti/" + klic).remove().then(() => {
     const firebaseBox = document.getElementById("firebase-box");
     firebaseBox.innerText = "🗑️ Událost byla úspěšně smazána!";
@@ -460,7 +545,7 @@ function smazatUdalost(klic) {
       firebaseBox.style.background = "rgba(0,128,0,0.85)";
     }, 3000);
 
-    // ⏪ Znovu načti tabulku po smazání
+    // 🔁 Obnova tabulky bez reloadu
     firebase.database().ref("udalosti").once("value").then(snapshot => {
       const data = snapshot.val();
       const keys = Object.keys(data || {}).reverse();
@@ -469,6 +554,7 @@ function smazatUdalost(klic) {
     });
   });
 }
+
 
 
 function zobrazPoznamku(text) {
@@ -495,11 +581,19 @@ function pridatUdalost() {
 
   const jednotky = [];
   if (document.getElementById('pcr').checked) jednotky.push("PČR");
-  if (document.getElementById('rza').checked) jednotky.push("RZA");
-  if (document.getElementById('t815').checked) jednotky.push("T-815");
-  if (document.getElementById('cas20').checked) jednotky.push("CAS 20");
-  if (document.getElementById('cas30').checked) jednotky.push("CAS 30");
-  if (document.getElementById('az30').checked) jednotky.push("AZ 30-S2Z");
+  if (document.getElementById('zzs').checked) jednotky.push("ZZS");
+  if (document.getElementById('vea').checked) jednotky.push("VEA");
+  if (document.getElementById('ta').checked) jednotky.push("TA");
+  if (document.getElementById('da').checked) jednotky.push("DA");
+  if (document.getElementById('t815').checked) jednotky.push("HSA 241");
+  if (document.getElementById('t148').checked) jednotky.push("HSA 242");
+  if (document.getElementById('cas20').checked) jednotky.push("PSA 101");
+  if (document.getElementById('cas30').checked) jednotky.push("PSA 102");
+  if (document.getElementById('az30').checked) jednotky.push("PSA 103");
+  if (document.getElementById('rza').checked) jednotky.push("PSA 106");
+  if (document.getElementById('cas202').checked) jednotky.push("PSA 107");
+  if (document.getElementById('cas15').checked) jednotky.push("PSA 117");
+  if (document.getElementById('vya').checked) jednotky.push("VYA");
 
   if (jednotky.length === 0) {
     const firebaseBox = document.getElementById("firebase-box");
@@ -535,7 +629,23 @@ function pridatUdalost() {
     "OST": "Ostatní událost"
   };
 
-  const hlaseniText = `Pozor poplach! Nová událost. ${typText[typ] || nazev} Ulice ${ulice} ${mesto}. ${typText[typ] || nazev} ${poznamka || "bez poznámky"}. Vyjede: ${jednotky.join(", ")}.`;
+const jednotkyVyslov = jednotky.map(j => {
+  if (j === "VEA") return "Velitelský Automobil";
+  if (j === "TA") return "Technický Automobil";
+  if (j === "DA") return "Dopravní Automobil";
+  if (j === "VYA") return "Vyprošťovací Automobil";
+  if (j === "PSA 101") return "P S A STO JEDNA";
+  if (j === "PSA 102") return "P S A STO DVA";
+  if (j === "PSA 103") return "P S A STO TŘI";
+  if (j === "PSA 106") return "P S A STO ŠEST";
+  if (j === "PSA 107") return "P S A STO SEDM";
+  if (j === "PSA 117") return "P S A STO SEDMNÁCT";
+  if (j === "HSA 241") return "HÁESÁ  DVĚSTĚ ČTYŘICET JEDNA";
+  if (j === "HSA 242") return "HÁESÁ  DVĚSTĚ ČTYŘICET DVA";
+  return j; // ostatní nech tak, jak jsou
+});
+
+  const hlaseniText = `Pozor poplach! Nová událost. ${typText[typ] || nazev} Ulice ${ulice} ${mesto}. ${typText[typ] || nazev} ${poznamka || "bez poznámky"}. Vyjede: ${jednotkyVyslov.join(", ")}.`;
 
 const typyProPoplach = ["P", "DN", "TP", "ZOZ", "UNL", "POP", "OST"]; // můžeš přidat další podle potřeby
 
@@ -565,36 +675,7 @@ if (typyProPoplach.includes(typ)) {
     odesilatel: mojeId
   });
 
-const zvuk = document.getElementById("zvuk-udalosti");
-zvuk.muted = false;
-zvuk.currentTime = 0;
-zvuk.play();
-
-// ⏳ Po skončení první sirény → hlas
-zvuk.play();
-
-zvuk.onended = () => {
-  zvuk.onended = null;
-
-  const hlaseni = new SpeechSynthesisUtterance(hlaseniText);
-  hlaseni.lang = "cs-CZ";
-  hlaseni.rate = 0.95;
-  hlaseni.pitch = 0.9;
-  hlaseni.volume = 1;
-
-  const ceskyHlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
-  if (ceskyHlas) hlaseni.voice = ceskyHlas;
-
-  hlaseni.onend = () => {
-    setTimeout(() => {
-      zvuk.currentTime = 0;
-      zvuk.play();
-    }, 100); // malá prodleva pro jistotu
-  };
-
-  speechSynthesis.speak(hlaseni);
-};
-
+prehratSekvenci(hlaseniText);
 
 
   const casVyhlaseni = new Date().toLocaleString("cs-CZ", {
@@ -666,40 +747,90 @@ function zobrazTabulku(udalosti, keys) {
   const tbody = document.querySelector("#tabulka tbody");
   tbody.innerHTML = "";
 
-  udalosti.forEach((u, index) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${u.casVyhlaseni || "-"}</td>
-      <td>${u.nazev}</td>
-      <td>${u.typ}</td>
-      <td>${u.ulice || "-"}</td>
-      <td>${u.mesto || "-"}</td>
-      <td>
-        ${prihlaseny ? `
-          <select onchange="aktualizujStav(this.value, ${index})">
-            <option ${u.stav === "Přijatá, SaP na cestě" ? "selected" : ""}>Přijatá, SaP na cestě</option>
-            <option ${u.stav === "Otevřená, SaP na místě" ? "selected" : ""}>Otevřená, SaP na místě</option>
-            <option ${u.stav === "Lokalizace" ? "selected" : ""}>Lokalizace</option>
-            <option ${u.stav === "Likvidace" ? "selected" : ""}>Likvidace</option>
-            <option ${u.stav === "Převzatá VZ" ? "selected" : ""}>Převzatá VZ</option>
-            <option ${u.stav === "Převzatá PČR" ? "selected" : ""}>Převzatá PČR</option>
-            <option ${u.stav === "Uzavřená OS" ? "selected" : ""}>Uzavřená OS</option>
-          </select>
-        ` : `<span>${u.stav}</span>`}
-      </td>
-      <td>${u.jednotky || "-"}</td>
-      <td>
-        ${u.poznamka
-          ? `${u.poznamka.length > 10
-              ? `${u.poznamka.slice(0, 13)}... <span class="info-icon" onclick="zobrazPoznamku('${u.poznamka}')">ℹ️</span>`
-              : u.poznamka}`
-          : "-"}
-      </td>
-      ${prihlaseny ? `<td><button onclick="smazatUdalost('${keys[index]}')">🗑️</button></td>` : ""}
-    `;
-    tbody.appendChild(tr);
+  // 🧹 Nejprve smažeme staré markery z mapy
+  for (const klic in aktivniMarkery) {
+    map.removeLayer(aktivniMarkery[klic]);
+  }
+  Object.keys(aktivniMarkery).forEach(k => delete aktivniMarkery[k]);
+
+udalosti.forEach((u, index) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+<td>${u.casVyhlaseni || "-"}</td>
+<td>
+  ${prihlaseny ? `
+    <input type="text" value="${u.nazev}" onchange="aktualizujNazev(this.value, ${index})" style="width:120px;">
+  ` : u.nazev}
+</td>
+<td>
+  ${prihlaseny ? `
+    <select onchange="aktualizujTyp(this.value, ${index})">
+      <option value="P" ${u.typ === "P" ? "selected" : ""}>Požár</option>
+      <option value="DN" ${u.typ === "DN" ? "selected" : ""}>Dopravní nehoda</option>
+      <option value="TP" ${u.typ === "TP" ? "selected" : ""}>Technická pomoc</option>
+      <option value="ZOZ" ${u.typ === "ZOZ" ? "selected" : ""}>Záchrana osob a zvířat</option>
+      <option value="UNL" ${u.typ === "UNL" ? "selected" : ""}>Únik nebezpečných látek</option>
+      <option value="POP" ${u.typ === "POP" ? "selected" : ""}>Poplach</option>
+      <option value="OST" ${u.typ === "OST" ? "selected" : ""}>Ostatní</option>
+    </select>
+  ` : u.typ}
+</td>
+<td>${u.ulice || "-"}</td>
+<td>${u.mesto || "-"}</td>
+<td>
+  ${prihlaseny ? `
+    <select onchange="aktualizujStav(this.value, ${index})">
+      <option ${u.stav === "Přijatá, SaP na cestě" ? "selected" : ""}>Přijatá, SaP na cestě</option>
+      <option ${u.stav === "Otevřená, SaP na místě" ? "selected" : ""}>Otevřená, SaP na místě</option>
+      <option ${u.stav === "Lokalizace" ? "selected" : ""}>Lokalizace</option>
+      <option ${u.stav === "Likvidace" ? "selected" : ""}>Likvidace</option>
+      <option ${u.stav === "Převzatá VZ" ? "selected" : ""}>Převzatá VZ</option>
+      <option ${u.stav === "Převzatá PČR" ? "selected" : ""}>Převzatá PČR</option>
+      <option ${u.stav === "Uzavřená OS" ? "selected" : ""}>Uzavřená OS</option>
+    </select>
+  ` : `<span>${u.stav}</span>`}
+</td>
+<td>
+  ${prihlaseny ? `
+    <div style="display:flex; flex-wrap:wrap; gap:5px;">
+      ${["PČR", "ZZS", "VEA", "DA", "T-815", "CAS 15", "CAS 20", "CAS 20", "CAS 30", "AZ 30-S2Z", "VYA"].map(j =>
+        `<label><input type="checkbox" onchange="aktualizujJednotkyCheckbox('${j}', ${index}, this.checked)" ${u.jednotky.includes(j) ? "checked" : ""}> ${j}</label>`
+      ).join("")}
+    </div>
+  ` : u.jednotky || "-"}
+</td>
+<td>
+  ${prihlaseny ? `
+    <textarea onchange="aktualizujPoznamku(this.value, ${index})" style="width:180px; height:50px;">${u.poznamka || ""}</textarea>
+  ` : (
+    u.poznamka
+      ? `${u.poznamka.length > 10
+          ? `${u.poznamka.slice(0, 13)}... <span class="info-icon" onclick="zobrazPoznamku('${u.poznamka}')">ℹ️</span>`
+          : u.poznamka}`
+      : "-"
+  )}
+</td>
+${prihlaseny ? `<td><button onclick="smazatUdalost('${keys[index]}')">🗑️</button></td>` : ""}
+`;
+  tbody.appendChild(tr);
+
+    // 📍 Vykreslení markeru na mapu + uložení do aktivniMarkery
+    const marker = L.marker([u.lat, u.lng], {
+      icon: ikony[u.typ]
+    }).addTo(map);
+
+    marker.bindPopup(
+      `<div style="font-size:1.3em; font-weight:bold; margin-bottom:5px;">${u.nazev}</div>
+       <div><strong>Čas:</strong> ${u.casVyhlaseni}</div>
+       <div><strong>Adresa:</strong> ${u.ulice}, ${u.mesto}</div>
+       <div><strong>Jednotky:</strong> ${u.jednotky}</div>
+       <div><i>${u.poznamka}</i></div>`
+    );
+
+    aktivniMarkery[keys[index]] = marker;
   });
 }
+
 
 
 function vygenerujAdresu() {
@@ -744,6 +875,51 @@ function aktualizujStav(novyStav, index) {
     firebase.database().ref("udalosti/" + key).update({ stav: novyStav });
   });
 }
+
+function aktualizujNazev(novyNazev, index) {
+  if (!prihlaseny) return;
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ nazev: novyNazev });
+  });
+}
+
+function aktualizujTyp(novyTyp, index) {
+  if (!prihlaseny) return;
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ typ: novyTyp });
+  });
+}
+
+function aktualizujJednotkyCheckbox(jednotka, index, checked) {
+  if (!prihlaseny) return;
+
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    const aktualni = data[key].jednotky?.split(",").map(j => j.trim()) || [];
+
+    let noveJednotky;
+    if (checked) {
+      // Přidat jednotku
+      if (!aktualni.includes(jednotka)) aktualni.push(jednotka);
+    } else {
+      // Odebrat jednotku
+      noveJednotky = aktualni.filter(j => j !== jednotka);
+    }
+
+    firebase.database().ref("udalosti/" + key).update({
+      jednotky: (noveJednotky || aktualni).join(", ")
+    });
+  });
+}
+
 
 function aktualizujPoznamku(novaPoznamka, index) {
   firebase.database().ref("udalosti").once("value").then(snapshot => {
@@ -820,47 +996,45 @@ function ulozitAOdhlasit() {
 
 window.onload = function () {
   // ✅ Aktivace hlasového enginu po prvním kliknutí
-window.addEventListener("click", () => {
-const dummy = new SpeechSynthesisUtterance("");
-dummy.lang = "cs-CZ";
-speechSynthesis.speak(dummy);
+  window.addEventListener("click", () => {
+    const dummy = new SpeechSynthesisUtterance("");
+    dummy.lang = "cs-CZ";
+    speechSynthesis.speak(dummy);
 
+    const zvuk = document.getElementById("zvuk-udalosti");
+    if (zvuk) {
+      zvuk.muted = false;
+      zvuk.play().catch(() => {});
+      zvuk.pause();
+      zvuk.currentTime = 0;
+    }
 
-  const zvuk = document.getElementById("zvuk-udalosti");
-  if (zvuk) {
-    zvuk.muted = false;
-    zvuk.play().catch(() => {});
-    zvuk.pause();
-    zvuk.currentTime = 0;
-  }
+    // ✅ Zobraz hlášku pro všechny uživatele
+    const firebaseBox = document.getElementById("firebase-box");
+    firebaseBox.innerText = "🔊 Události aktivovány";
+    firebaseBox.style.background = "rgba(0,128,0,0.85)";
+    firebaseBox.style.display = "block";
 
-  console.log("🔓 Zvuk a hlas odemčen pro Chrome/Safari");
-}, { once: true });
+    setTimeout(() => {
+      firebaseBox.style.display = "none";
+    }, 4000);
 
+    console.log("🔓 Zvuk a hlas odemčen pro Chrome/Safari");
+  }, { once: true });
 
   // 🔔 Posluchač na poplach z Firebase
   let posledniPoplachCas = 0;
-firebase.database().ref("poplach").on("value", snap => {
-  const data = snap.val();
-  if (!data || data.cas === posledniPoplachCas || data.odesilatel === mojeId) return;
-  posledniPoplachCas = data.cas;
+  firebase.database().ref("poplach").on("value", snap => {
+    const data = snap.val();
+    if (!data || data.cas === posledniPoplachCas || data.odesilatel === mojeId) return;
+    posledniPoplachCas = data.cas;
 
-  const zvuk = document.getElementById("zvuk-udalosti");
-  zvuk.muted = false;
-  zvuk.currentTime = 0;
-  zvuk.play();
+    prehratSekvenci(data.text); // ← použij jednotnou sekvenci
 
-  const hlaseni = new SpeechSynthesisUtterance(data.text);
-  hlaseni.lang = "cs-CZ";
-  const hlas = (window.availableVoices || []).find(h => h.lang === "cs-CZ");
-  if (hlas) hlaseni.voice = hlas;
-  speechSynthesis.speak(hlaseni);
-
-  setTimeout(() => {
-    firebase.database().ref("poplach").remove();
-  }, 5000);
-});
-
+    setTimeout(() => {
+      firebase.database().ref("poplach").remove();
+    }, 5000);
+  });
 
 
   // 🔁 Načtení dat z Firebase
@@ -887,11 +1061,6 @@ firebase.database().ref("poplach").on("value", snap => {
   });
 };
 
-
-
-  setTimeout(() => {
-    location.reload();
-  }, 320000); // 3 minuty
 </script>
 </body>
 </html>
