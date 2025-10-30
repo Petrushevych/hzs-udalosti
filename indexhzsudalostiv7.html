@@ -323,6 +323,28 @@ body, html {
     <option value="POP">Poplach</option>
     <option value="OST">Ostatní</option>
   </select>
+  
+  <!-- Podtypy událostíííííííííííííííí -->
+<div id="podtyp-box" style="display:none;">
+  <label>Podtyp události:</label>
+  <select id="podtyp">
+    <option value="">-- Vyber podtyp --</option>
+  </select>
+</div>
+
+<!-- Rozsahyyyyyyyyy -->
+<div id="rozsah-box" style="display:none;">
+  <label>Rozsah požáru:</label>
+  <select id="rozsah">
+    <option value="">-- Vyber rozsah --</option>
+    <option value="I. Stupeň">I. Stupeň</option>
+    <option value="II. Stupeň">II. Stupeň</option>
+    <option value="III. Stupeň">III. Stupeň</option>
+    <option value="Zvláštní stupeň">Zvláštní stupeň</option>
+  </select>
+</div>
+
+  
 <label>Ulice + č. p. (automaticky):</label>
 <input type="text" id="ulice" style="background-color: #f0f0f0;">
 
@@ -574,6 +596,8 @@ window.speechSynthesis.onvoiceschanged = () => {
 function pridatUdalost() {
   const nazev = document.getElementById('nazev').value;
   const typ = document.getElementById('typ').value;
+  const podtyp = document.getElementById("podtyp").value;
+  const rozsah = document.getElementById("rozsah").value;
   const stav = document.getElementById('stav').value;
   const poznamka = document.getElementById('poznamka').value;
   const ulice = document.getElementById("ulice").value;
@@ -703,6 +727,8 @@ prehratSekvenci(hlaseniText);
     casVyhlaseni,
     nazev,
     typ,
+    podtyp,
+    rozsah,
     ulice,
     mesto,
     stav,
@@ -735,6 +761,8 @@ function zobrazTabulku(udalosti, keys) {
       <th>Čas</th>
       <th>Název</th>
       <th>Typ</th>
+      <th>Podtyp</th>
+      <th>Rozsah</th>
       <th>Ulice</th>
       <th>Město</th>
       <th>Stav</th>
@@ -756,27 +784,48 @@ function zobrazTabulku(udalosti, keys) {
 udalosti.forEach((u, index) => {
   const tr = document.createElement("tr");
   tr.innerHTML = `
-<td>${u.casVyhlaseni || "-"}</td>
-<td>
-  ${prihlaseny ? `
-    <input type="text" value="${u.nazev}" onchange="aktualizujNazev(this.value, ${index})" style="width:120px;">
-  ` : u.nazev}
-</td>
-<td>
-  ${prihlaseny ? `
-    <select onchange="aktualizujTyp(this.value, ${index})">
-      <option value="P" ${u.typ === "P" ? "selected" : ""}>Požár</option>
-      <option value="DN" ${u.typ === "DN" ? "selected" : ""}>Dopravní nehoda</option>
-      <option value="TP" ${u.typ === "TP" ? "selected" : ""}>Technická pomoc</option>
-      <option value="ZOZ" ${u.typ === "ZOZ" ? "selected" : ""}>Záchrana osob a zvířat</option>
-      <option value="UNL" ${u.typ === "UNL" ? "selected" : ""}>Únik nebezpečných látek</option>
-      <option value="POP" ${u.typ === "POP" ? "selected" : ""}>Poplach</option>
-      <option value="OST" ${u.typ === "OST" ? "selected" : ""}>Ostatní</option>
-    </select>
-  ` : u.typ}
-</td>
-<td>${u.ulice || "-"}</td>
-<td>${u.mesto || "-"}</td>
+  <td>${u.casVyhlaseni || "-"}</td>
+  <td>
+    ${prihlaseny ? `
+      <input type="text" value="${u.nazev}" onchange="aktualizujNazev(this.value, ${index})" style="width:120px;">
+    ` : u.nazev}
+  </td>
+  <td>
+    ${prihlaseny ? `
+      <select onchange="aktualizujTyp(this.value, ${index})">
+        <option value="P" ${u.typ === "P" ? "selected" : ""}>Požár</option>
+        <option value="DN" ${u.typ === "DN" ? "selected" : ""}>Dopravní nehoda</option>
+        <option value="TP" ${u.typ === "TP" ? "selected" : ""}>Technická pomoc</option>
+        <option value="ZOZ" ${u.typ === "ZOZ" ? "selected" : ""}>Záchrana osob a zvířat</option>
+        <option value="UNL" ${u.typ === "UNL" ? "selected" : ""}>Únik nebezpečných látek</option>
+        <option value="POP" ${u.typ === "POP" ? "selected" : ""}>Poplach</option>
+        <option value="OST" ${u.typ === "OST" ? "selected" : ""}>Ostatní</option>
+      </select>
+    ` : u.typ}
+  </td>
+  
+  <!-- 🔥 NOVÉ: Podtyp -->
+  <td>
+    ${prihlaseny ? `
+      <input type="text" value="${u.podtyp || ''}" onchange="aktualizujPodtyp(this.value, ${index})" style="width:120px;">
+    ` : u.podtyp || "-"}
+  </td>
+  
+  <!-- 🔥 NOVÉ: Rozsah -->
+  <td>
+    ${prihlaseny ? `
+      <select onchange="aktualizujRozsah(this.value, ${index})">
+        <option value="">--</option>
+        <option value="I. Stupeň" ${u.rozsah === "I. Stupeň" ? "selected" : ""}>I. Stupeň</option>
+        <option value="II. Stupeň" ${u.rozsah === "II. Stupeň" ? "selected" : ""}>II. Stupeň</option>
+        <option value="III. Stupeň" ${u.rozsah === "III. Stupeň" ? "selected" : ""}>III. Stupeň</option>
+        <option value="Zvláštní stupeň" ${u.rozsah === "Zvláštní stupeň" ? "selected" : ""}>Zvláštní stupeň</option>
+      </select>
+    ` : u.rozsah || "-"}
+  </td>
+  
+  <td>${u.ulice || "-"}</td>
+  <td>${u.mesto || "-"}</td>
 <td>
   ${prihlaseny ? `
     <select onchange="aktualizujStav(this.value, ${index})">
@@ -845,6 +894,39 @@ function vygenerujAdresu() {
     "Chomutov", "Louny", "Roudnice nad Labem", "Bílina", "Žatec", "Praha 2", "Praha 3", "Praha 4", "Brno", "Ostrava"
   ];
 
+const podtypyMap = {
+  "P": ["NÍZKÉ BUDOVY", "VÝŠKOVÉ BUDOVY"],
+  "DN": ["VYPROŠTĚNÍ OSOB"],
+  "TP": ["SPOLUPRÁCE SE SLOŽKAMI IZS"],
+  "ZOZ": ["Z VÝŠKY"],
+  "UNL": ["NA POZEMNÍ KOMUNIKACI"],
+  "POP": ["PLANÝ POPLACH"],
+  "OST": ["JINÉ"]
+};
+
+document.getElementById("typ").addEventListener("change", function () {
+  const typ = this.value;
+  const podtypSelect = document.getElementById("podtyp");
+  const podtypBox = document.getElementById("podtyp-box");
+  const rozsahBox = document.getElementById("rozsah-box");
+
+  if (podtypyMap[typ]) {
+    podtypBox.style.display = "block";
+    podtypSelect.innerHTML = '<option value="">-- Vyber podtyp --</option>';
+    podtypyMap[typ].forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      podtypSelect.appendChild(opt);
+    });
+  } else {
+    podtypBox.style.display = "none";
+    podtypSelect.innerHTML = "";
+  }
+
+  rozsahBox.style.display = typ === "P" ? "block" : "none";
+});
+
   const nahodnaUlice = uliceSeznam[Math.floor(Math.random() * uliceSeznam.length)];
   const nahodneCislo = Math.floor(Math.random() * 200) + 1;
   const nahodneMesto = mestaSeznam[Math.floor(Math.random() * mestaSeznam.length)];
@@ -893,6 +975,26 @@ function aktualizujTyp(novyTyp, index) {
     const keys = Object.keys(data || {}).reverse();
     const key = keys[index];
     firebase.database().ref("udalosti/" + key).update({ typ: novyTyp });
+  });
+}
+
+function aktualizujPodtyp(novyPodtyp, index) {
+  if (!prihlaseny) return;
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ podtyp: novyPodtyp });
+  });
+}
+
+function aktualizujRozsah(novyRozsah, index) {
+  if (!prihlaseny) return;
+  firebase.database().ref("udalosti").once("value").then(snapshot => {
+    const data = snapshot.val();
+    const keys = Object.keys(data || {}).reverse();
+    const key = keys[index];
+    firebase.database().ref("udalosti/" + key).update({ rozsah: novyRozsah });
   });
 }
 
