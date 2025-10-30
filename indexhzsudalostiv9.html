@@ -668,9 +668,9 @@ const jednotkyVyslov = jednotky.map(j => {
   return j; // ostatní nech tak, jak jsou
 });
 
-  const hlaseniText = `Pozor poplach! Nová událost. ${typText[typ] || nazev} Ulice ${ulice} ${mesto}. ${typText[typ] || nazev} ${poznamka || "bez poznámky"}. Vyjede: ${jednotkyVyslov.join(", ")}.`;
+const hlaseniText = `Pozor poplach! Nová událost. Vyjede: ${jednotkyVyslov.join(", ")}.${typText[typ] || nazev}.${podtyp || "neuveden"}. Popis události: ${poznamka || "bez poznámky"}. Ulice: ${ulice}, ${mesto}.`;
 
-const typyProPoplach = ["P", "DN", "TP", "ZOZ", "UNL", "POP", "OST"]; // můžeš přidat další podle potřeby
+const typyProPoplach = ["P", "DN", "TP", "ZOZ", "UNL", "POP", "OST"];
 
 if (typyProPoplach.includes(typ)) {
   console.log("📡 Pokus o zápis do poplach pro typ:", typ);
@@ -698,8 +698,8 @@ if (typyProPoplach.includes(typ)) {
     odesilatel: mojeId
   });
 
-prehratSekvenci(hlaseniText);
-
+  prehratSekvenci(hlaseniText);
+  
 
   const casVyhlaseni = new Date().toLocaleString("cs-CZ", {
     day: "2-digit",
@@ -803,14 +803,24 @@ udalosti.forEach((u, index) => {
     ` : u.typ}
   </td>
   
-  <!-- 🔥 NOVÉ: Podtyp -->
+  <!-- Ppodtyp -->
   <td>
     ${prihlaseny ? `
-      <input type="text" value="${u.podtyp || ''}" onchange="aktualizujPodtyp(this.value, ${index})" style="width:120px;">
+      <select onchange="aktualizujPodtyp(this.value, ${index})">
+        <option value="">--</option>
+        <option value="NÍZKÉ BUDOVY" ${u.podtyp === "NÍZKÉ BUDOVY" ? "selected" : ""}>NÍZKÉ BUDOVY</option>
+        <option value="VÝŠKOVÉ BUDOVY" ${u.podtyp === "VÝŠKOVÉ BUDOVY" ? "selected" : ""}>VÝŠKOVÉ BUDOVY</option>
+        <option value="VYPROŠTĚNÍ OSOB" ${u.podtyp === "VYPROŠTĚNÍ OSOB" ? "selected" : ""}>VYPROŠTĚNÍ OSOB</option>
+        <option value="SPOLUPRÁCE SE SLOŽKAMI IZS" ${u.podtyp === "SPOLUPRÁCE SE SLOŽKAMI IZS" ? "selected" : ""}>SPOLUPRÁCE SE SLOŽKAMI IZS</option>
+        <option value="Z VÝŠKY" ${u.podtyp === "Z VÝŠKY" ? "selected" : ""}>Z VÝŠKY</option>
+        <option value="NA POZEMNÍ KOMUNIKACI" ${u.podtyp === "NA POZEMNÍ KOMUNIKACI" ? "selected" : ""}>NA POZEMNÍ KOMUNIKACI</option>
+        <option value="PLANÝ POPLACH" ${u.podtyp === "PLANÝ POPLACH" ? "selected" : ""}>PLANÝ POPLACH</option>
+        <option value="JINÉ" ${u.podtyp === "JINÉ" ? "selected" : ""}>JINÉ</option>
+      </select>
     ` : u.podtyp || "-"}
   </td>
   
-  <!-- 🔥 NOVÉ: Rozsah -->
+  <!-- Rozsah -->
   <td>
     ${prihlaseny ? `
       <select onchange="aktualizujRozsah(this.value, ${index})">
@@ -1100,13 +1110,13 @@ window.onload = function () {
 
 
 const podtypyMap = {
-  "P": ["NÍZKÉ BUDOVY", "VÝŠKOVÉ BUDOVY"],
-  "DN": ["VYPROŠTĚNÍ OSOB"],
-  "TP": ["SPOLUPRÁCE SE SLOŽKAMI IZS"],
-  "ZOZ": ["Z VÝŠKY"],
-  "UNL": ["NA POZEMNÍ KOMUNIKACI"],
+  "P": ["NÍZKÉ BUDOVY", "VÝŠKOVÉ BUDOVY", "PRŮMYSLOVÉ, ZEMĚDĚLSKÉ OBJEKTY, SKLADY", "SHROMAŽDIŠTĚ OSOB", "PODZEMNÍ PROSTORY, TUNELY", "VÝŠKOVÉ BUDOVY", "LESNÍ POROST", "POLNÍ POROST, TRÁVA", "TRAFOSTANICE, ROZVODNY", "DOPRAVNÍ PROSTŘEDKY"],
+  "DN": ["VYPROŠTĚNÍ OSOB", "SE ZRANĚNÍM", "UVOLNĚNÍ KOMUNIKACE, ODTAŽENÍ", "ÚKLID VOZOVKY", "ŽELEZNIČNÍ", "LETECKÁ"],
+  "TP": ["SPOLUPRÁCE SE SLOŽKAMI IZS", "TRANSPORT PACIENTA", "DESTRUKCE OBJEKTU", "NÁHRADA NEFUNKČNÍHO ZAŘÍZENÍ", "OTEVŘENÍ UZAVŘENÝCH PROSTOR", "ODSTRANĚNÍ NEBEZPEČNÝCH STAVŮ", "ODSTRANĚNÍ STROMU", "LIKVIDACE OBTÍŽNÉHO HMYZU", "ODSTRAŇOVÁNÍ PŘEKÁŽEK", "ČERPÁNÍ VODY", "MĚŘENÍ KONCENTRACÍ", "MONITORING", "ZÁLOHA NA PS"],
+  "ZOZ": ["Z VÝŠKY", "Z HLOUBKY", "Z VODY", "UZAVŘENÉ PROSTORY, VÝTAH", "ZASYPANÉ, ZAVALENÉ", "AED"],
+  "UNL": ["NA POZEMNÍ KOMUNIKACI", "DO PŮDY", "NA (DO) VODNÍ PLOCHU(Y)", "DO OVZDUŠÍ"],
   "POP": ["PLANÝ POPLACH"],
-  "OST": ["JINÉ"]
+  "OST": ["RADIAČNÍ NEHODA, HAVÁRIE", "EVAKUACE A OCHRANA OBYVATEL PLOŠNÁ", "JINÉ"]
 };
 
 document.getElementById("typ").addEventListener("change", function () {
